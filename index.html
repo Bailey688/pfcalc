@@ -190,6 +190,7 @@
             display: inline-block;
         }
 
+        /* 桌機版雙欄配比 */
         .main-layout {
             display: grid;
             grid-template-columns: 1fr 1.8fr;
@@ -282,9 +283,16 @@
             border-bottom: 2px solid #e2e8f0;
             color: #1a365d;
         }
-        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
         
-        /* 重新調配5個欄位的寬度比例（移除原第四欄現金價值） */
+        /* 解決手機版表格重疊防擠壓的核心 */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; min-width: 650px; }
+        
         th:nth-child(1), td:nth-child(1) { width: 12%; padding-left: 20px; } 
         th:nth-child(2), td:nth-child(2) { width: 16%; } 
         th:nth-child(3), td:nth-child(3) { width: 22%; } 
@@ -362,6 +370,39 @@
             font-size: 0.9rem;
             padding: 0;
             margin-left: auto;
+        }
+
+        /* =======================================================
+           📱 RWD 響應式媒體查詢 (iPad, iPhone 優化改版)
+           ======================================================= */
+        @media screen and (max-width: 1024px) {
+            body { padding: 12px; font-size: 14px; }
+            .container { padding: 16px; border-radius: 16px; }
+            header { margin-bottom: 20px; padding-bottom: 12px; }
+            h1 { font-size: 1.8rem !important; }
+            
+            /* 控制面板與主排版由橫變直 */
+            .control-panel, .main-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .grid-results { gap: 12px; margin-bottom: 20px; }
+            .res-card { padding: 16px; }
+            .res-value { font-size: 1.8rem; }
+            
+            /* CSV 輸入列在窄螢幕下的微調避免重疊 */
+            .csv-row { padding: 10px; gap: 6px; }
+            .csv-input-val { width: 90px; font-size: 1.1rem; }
+            .unfunded-roi-box { min-width: 55px; font-size: 1rem; }
+        }
+
+        @media screen and (max-width: 480px) {
+            /* 針對 iPhone 直向特別優化 */
+            .grid-inputs { grid-template-columns: 1fr 1fr; gap: 10px; } /* 輸入框變兩列 */
+            .grid-inputs .input-card:last-child { grid-column: span 2; } /* 最後一個撐滿 */
+            .input-card { padding: 12px; border-radius: 12px; }
+            .input-card input { font-size: 1.2rem; }
+            .res-value { font-size: 1.5rem; }
         }
 
         @media print {
@@ -465,18 +506,21 @@
 
         <div class="table-section">
             <div class="table-title">年度分析明細</div>
-            <table id="resultTable">
-                <thead>
-                    <tr>
-                        <th style="padding-left:20px;">年期</th>
-                        <th>本金</th>
-                        <th>總支出</th>
-                        <th>還款後價值</th>
-                        <th style="padding-right:20px;">回報</th>
-                    </tr>
-                </thead>
-                <tbody id="resultTableBody"></tbody>
-            </table>
+            <!-- 套用橫向滾動容器 -->
+            <div class="table-responsive">
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:20px;">年期</th>
+                            <th>本金</th>
+                            <th>總支出</th>
+                            <th>還款後價值</th>
+                            <th style="padding-right:20px;">回報</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
