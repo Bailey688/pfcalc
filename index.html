@@ -410,3 +410,318 @@
         <div class="input-card">
             <div class="card-label" style="color:#2b6cb0;">折扣後保費</div>
             <div class="card-input-wrapper">
+                <span>$</span><input type="number" id="discountedPremium" value="1350000" oninput="calculateAll()" style="color:#2b6cb0;">
+            </div>
+        </div>
+        <div class="input-card">
+            <div class="card-label">首日退保價值</div>
+            <div class="card-input-wrapper">
+                <span>$</span><input type="number" id="day1Csv" value="1100000" oninput="calculateAll()">
+            </div>
+        </div>
+        <div class="input-card">
+            <div class="card-label">融資比率 %</div>
+            <div class="card-input-wrapper">
+                <input type="number" id="ltvRate" value="80" step="0.0001" oninput="calculateAll()"><span>%</span>
+            </div>
+        </div>
+        <div class="input-card">
+            <div class="card-label">申請手續費</div>
+            <div class="card-input-wrapper">
+                <span>$</span><input type="number" id="applicationFee" value="5000" oninput="calculateAll()">
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-results">
+        <div class="res-card res-blue">
+            <div class="res-label">預計貸款金額</div>
+            <div class="res-value" id="lblLoanAmount">$0</div>
+        </div>
+        <div class="res-card res-green">
+            <div class="res-label">初始投入本金</div>
+            <div class="res-value" id="lblInitialPrincipal">$0</div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="slider-section">
+            <div class="slider-header">
+                <span>貸款年利率</span>
+                <span id="lblInterestRate" style="color:#63b3ed; font-size:1.6rem;">2.7%</span>
+            </div>
+            <div class="slider-wrapper">
+                <input type="range" id="interestRate" min="0" max="8" step="0.1" value="2.7" oninput="calculateAll()">
+            </div>
+        </div>
+
+        <div class="fee-section">
+            <div class="fee-header">
+                <span>每年手續費</span>
+                <div class="fee-toggle-container">
+                    <button id="btnFeePercent" class="fee-btn active" onclick="setFeeMode('percent')">按比例 (%)</button>
+                    <button id="btnFeeFixed" class="fee-btn" onclick="setFeeMode('fixed')">固定收費 ($)</button>
+                </div>
+            </div>
+            <div class="fee-input-wrapper">
+                <span id="feeSymbol">%</span>
+                <input type="number" id="annualFeeValue" value="0.0" step="0.01" oninput="calculateAll()">
+                <span id="feeSuffix" class="fee-small-text">貸款額</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="csv-section">
+            <div class="csv-header">
+                <div class="csv-title">預期現金價值總額</div>
+                <button class="btn-add" onclick="addCsvRow()">+</button>
+            </div>
+            <div id="csvRowsContainer"></div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-title">年度分析明細</div>
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th style="padding-left:20px;">年期</th>
+                        <th>本金</th>
+                        <th>總支出</th>
+                        <th>現金價值</th>
+                        <th>還款後價值</th>
+                        <th style="padding-right:20px;">回報</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let defaultData = [
+        { year: 3, csv: 1400000 },
+        { year: 4, csv: 1520000 },
+        { year: 5, csv: 1690000 }
+    ];
+
+    let annualFeeMode = 'percent';
+    let openCalculations = {}; 
+
+    function init() {
+        const container = document.getElementById('csvRowsContainer');
+        container.innerHTML = '';
+        defaultData.forEach(item => { createRowHTML(item.year, item.csv); });
+        calculateAll();
+    }
+
+    function setFeeMode(mode) {
+        const btnPercent = document.getElementById('btnFeePercent');
+        const btnFixed = document.getElementById('btnFeeFixed');
+        const feeSymbol = document.getElementById('feeSymbol');
+        const feeSuffix = document.getElementById('feeSuffix');
+        const feeInput = document.getElementById('annualFeeValue');
+
+        annualFeeMode = mode;
+
+        if (mode === 'percent') {
+            btnPercent.classList.add('active');
+            btnFixed.classList.remove('active');
+            feeSymbol.innerText = '%';
+            feeSuffix.innerText = '貸款額';
+            feeInput.value = "0.0";
+        } else {
+            btnPercent.classList.remove('active');
+            btnFixed.classList.add('active');
+            feeSymbol.innerText = '$';
+            feeSuffix.innerText = '固定手續費';
+            feeInput.value = "0";
+        }
+        calculateAll();
+    }
+
+    function addCsvRow() {
+        const yrInputs = document.querySelectorAll('.csv-input-yr');
+        let nextYear = 1;
+        if(yrInputs.length > 0) {
+            const years = Array.from(yrInputs).map(input => parseInt(input.value) || 0);
+            nextYear = Math.max(...years) + 1;
+        }
+        createRowHTML(nextYear, 0);
+        calculateAll();
+    }
+
+    function createRowHTML(year, csv) {
+        const container = document.getElementById('csvRowsContainer');
+        const row = document.createElement('div');
+        row.className = 'csv-row';
+        row.innerHTML = `
+            <div class="csv-col" style="width: 55px;">
+                <label>年期</label>
+                <div>
+                    <input type="number" class="csv-input-yr" value="${year}" oninput="calculateAll()">
+                    <span style="font-size:1rem; color:#718096; font-weight:bold; margin-left:1px;">年</span>
+                </div>
+            </div>
+            <div class="csv-col" style="width: 125px; margin-left:5px;">
+                <label>預期價值</label>
+                <div>
+                    <span style="font-size:1.1rem; color:#718096; font-weight:bold; margin-right:2px;">$</span>
+                    <input type="number" class="csv-input-val" value="${csv}" oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="csv-col" style="flex:1; margin-left:8px;">
+                <label>未融資回報</label>
+                <div style="margin-top: 2px;">
+                    <span class="unfunded-roi-box" id="unfunded-roi-${year}">0.0%</span>
+                </div>
+            </div>
+            <button class="btn-del" onclick="deleteRow(this)">🗑️</button>
+        `;
+        container.appendChild(row);
+    }
+
+    function deleteRow(button) {
+        button.parentElement.remove();
+        calculateAll();
+    }
+
+    function formatWan(val) { 
+        return (val / 10000).toFixed(1) + '萬'; 
+    }
+
+    function toggleRowCalculation(year) {
+        openCalculations[year] = !openCalculations[year];
+        const formulas = document.querySelectorAll(`.calc-yr-${year}`);
+        formulas.forEach(el => {
+            if (openCalculations[year]) {
+                el.classList.add('show-calc');
+            } else {
+                el.classList.remove('show-calc');
+            }
+        });
+        const arrow = document.getElementById(`arrow-${year}`);
+        if(arrow) {
+            arrow.innerText = openCalculations[year] ? '︿' : '﹀';
+        }
+    }
+
+    function calculateAll() {
+        const totalPremium = parseFloat(document.getElementById('totalPremium').value) || 0;
+        const discountedPremium = parseFloat(document.getElementById('discountedPremium').value) || 0;
+        const day1Csv = parseFloat(document.getElementById('day1Csv').value) || 0;
+        const ltvRate = parseFloat(document.getElementById('ltvRate').value) || 0;
+        const applicationFee = parseFloat(document.getElementById('applicationFee').value) || 0;
+        const interestRate = parseFloat(document.getElementById('interestRate').value) || 0;
+        const annualFeeValue = parseFloat(document.getElementById('annualFeeValue').value) || 0;
+
+        document.getElementById('lblInterestRate').innerText = interestRate + '%';
+
+        const loanAmount = day1Csv * (ltvRate / 100);
+        const initialPrincipal = discountedPremium - loanAmount + applicationFee;
+
+        document.getElementById('lblLoanAmount').innerText = '$' + Math.round(loanAmount).toLocaleString();
+        document.getElementById('lblInitialPrincipal').innerText = '$' + Math.round(initialPrincipal).toLocaleString();
+
+        const yrInputs = document.querySelectorAll('.csv-input-yr');
+        const valInputs = document.querySelectorAll('.csv-input-val');
+        let rowsData = [];
+
+        for(let i=0; i<yrInputs.length; i++) {
+            let y = parseInt(yrInputs[i].value) || 0;
+            let c = parseFloat(valInputs[i].value) || 0;
+            rowsData.push({ year: y, csv: c });
+            
+            const unfundedRoiElement = document.getElementById(`unfunded-roi-${y}`);
+            if(unfundedRoiElement) {
+                if(discountedPremium > 0 && y > 0 && c > 0) {
+                    const unfundedRoi = ((c - discountedPremium) / discountedPremium) * 100;
+                    unfundedRoiElement.innerText = (unfundedRoi >= 0 ? '+' : '') + unfundedRoi.toFixed(1) + '%';
+                    unfundedRoiElement.style.backgroundColor = unfundedRoi >= 0 ? '#f0fff4' : '#fff5f5';
+                    unfundedRoiElement.style.color = unfundedRoi >= 0 ? '#38a169' : '#c53030';
+                } else {
+                    unfundedRoiElement.innerText = '0.0%';
+                    unfundedRoiElement.style.backgroundColor = '#edf2f7';
+                    unfundedRoiElement.style.color = '#4a5568';
+                }
+            }
+        }
+
+        rowsData.sort((a, b) => a.year - b.year);
+
+        const tbody = document.getElementById('resultTableBody');
+        tbody.innerHTML = '';
+
+        rowsData.forEach(row => {
+            if(row.year <= 0) return;
+
+            const annualInterest = loanAmount * (interestRate / 100);
+            const annualServiceFee = annualFeeMode === 'percent' ? loanAmount * (annualFeeValue / 100) : annualFeeValue;
+            const annualCost = annualInterest + annualServiceFee;
+            const cumulativeCost = annualCost * row.year;
+            
+            const valueAfterRepay = row.csv - loanAmount;
+            const netProfit = valueAfterRepay - initialPrincipal - cumulativeCost;
+            const returnRate = (netProfit / (initialPrincipal || 1)) * 100;
+            
+            let cagr = 0;
+            if (valueAfterRepay > 0 && initialPrincipal > 0) {
+                cagr = (Math.pow(1 + (returnRate / 100), 1 / row.year) - 1) * 100;
+            }
+
+            if (!openCalculations.hasOwnProperty(row.year)) {
+                openCalculations[row.year] = false; 
+            }
+
+            const isShowClass = openCalculations[row.year] ? 'show-calc' : '';
+            const arrowIcon = openCalculations[row.year] ? '︿' : '﹀';
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.onclick = () => toggleRowCalculation(row.year);
+            
+            const loanWan = (loanAmount / 10000).toFixed(1);
+            const csvWan = (row.csv / 10000).toFixed(1);
+            const principalWan = (initialPrincipal / 10000).toFixed(1);
+
+            tr.innerHTML = `
+                <td class="td-year">${row.year}</td>
+                <td class="td-main-val">${formatWan(initialPrincipal)}</td>
+                <td>
+                    <span class="td-main-val">${formatWan(cumulativeCost)}</span>
+                    <span class="sub-formula calc-yr-${row.year} ${isShowClass}">${loanWan}萬 x ${interestRate}% x ${row.year}</span>
+                </td>
+                <td class="td-main-val">${formatWan(row.csv)}</td>
+                <td>
+                    <span class="td-main-val">${formatWan(valueAfterRepay)}</span>
+                    <span class="sub-formula calc-yr-${row.year} ${isShowClass}">${csvWan}萬 - ${loanWan}萬</span>
+                </td>
+                <td>
+                    <div class="return-container">
+                        <div class="return-row-top">
+                            <span class="profit-text" style="color: ${netProfit >= 0 ? '#38a169' : '#e53e3e'}">
+                                ${netProfit >= 0 ? '' : ''}${formatWan(netProfit)}
+                            </span>
+                            <span class="badge-roi ${returnRate >= 0 ? 'bg-positive' : 'bg-negative'}">
+                                ${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(2)}%
+                            </span>
+                            <div class="cagr-text" style="margin-left: 8px; display: inline-block;">
+                                *年化: ${cagr.toFixed(2)}%
+                            </div>
+                            <button class="btn-arrow-toggle" id="arrow-${row.year}">${arrowIcon}</button>
+                        </div>
+                        <span class="sub-formula calc-yr-${row.year} ${isShowClass}" style="font-size:0.78rem; letter-spacing:-0.2px;">
+                            (${csvWan}萬 - ${principalWan}萬 - ${loanWan}萬 - 總支出) / ${principalWan}萬
+                        </span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
