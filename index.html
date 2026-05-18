@@ -190,7 +190,6 @@
             display: inline-block;
         }
 
-        /* 需求1：調整左右配比（左邊縮窄到1fr，右邊加寬到1.8fr），釋放右側寬度 */
         .main-layout {
             display: grid;
             grid-template-columns: 1fr 1.8fr;
@@ -275,7 +274,6 @@
             border-radius: 20px;
             overflow: hidden;
         }
-        /* 需求2：刪除了點擊展開/隱藏詳細算式的提示文字 */
         .table-title {
             padding: 20px 25px;
             background: #f7fafc;
@@ -286,12 +284,12 @@
         }
         table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
         
-        th:nth-child(1), td:nth-child(1) { width: 10%; padding-left: 20px; } 
-        th:nth-child(2), td:nth-child(2) { width: 13%; } 
-        th:nth-child(3), td:nth-child(3) { width: 18%; } 
-        th:nth-child(4), td:nth-child(4) { width: 14%; } 
-        th:nth-child(5), td:nth-child(5) { width: 15%; } 
-        th:nth-child(6), td:nth-child(6) { width: 30%; padding-right: 20px; } /* 加寬回報欄 */
+        /* 重新調配5個欄位的寬度比例（移除原第四欄現金價值） */
+        th:nth-child(1), td:nth-child(1) { width: 12%; padding-left: 20px; } 
+        th:nth-child(2), td:nth-child(2) { width: 16%; } 
+        th:nth-child(3), td:nth-child(3) { width: 22%; } 
+        th:nth-child(4), td:nth-child(4) { width: 18%; } 
+        th:nth-child(5), td:nth-child(5) { width: 32%; padding-right: 20px; } 
 
         th { 
             background: #f7fafc; 
@@ -323,7 +321,6 @@
         .td-year { font-weight: bold; color: #2d3748; font-size: 1.3rem; }
         .td-main-val { font-weight: bold; color: #2d3748; }
 
-        /* 需求1：優化回報欄排版結構，強制全部一整行打橫 */
         .return-container {
             display: flex;
             flex-direction: column;
@@ -334,7 +331,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            white-space: nowrap; /* 強制不換行 */
+            white-space: nowrap; 
             flex-wrap: nowrap;
         }
         .profit-text { font-weight: bold; white-space: nowrap; }
@@ -354,7 +351,7 @@
             font-size: 0.95rem;
             font-weight: bold;
             color: #4a5568;
-            white-space: nowrap; /* 強制不換行 */
+            white-space: nowrap; 
         }
 
         .btn-arrow-toggle {
@@ -467,7 +464,6 @@
         </div>
 
         <div class="table-section">
-            <div class="table-section">
             <div class="table-title">年度分析明細</div>
             <table id="resultTable">
                 <thead>
@@ -475,7 +471,6 @@
                         <th style="padding-left:20px;">年期</th>
                         <th>本金</th>
                         <th>總支出</th>
-                        <th>現金價值</th>
                         <th>還款後價值</th>
                         <th style="padding-right:20px;">回報</th>
                     </tr>
@@ -679,7 +674,6 @@
                     <span class="td-main-val">${formatWan(cumulativeCost)}</span>
                     <span class="sub-formula calc-yr-${row.year} ${isShowClass}">${loanWan}萬 x ${interestRate}% x ${row.year}</span>
                 </td>
-                <td class="td-main-val">${formatWan(row.csv)}</td>
                 <td>
                     <span class="td-main-val">${formatWan(valueAfterRepay)}</span>
                     <span class="sub-formula calc-yr-${row.year} ${isShowClass}">${csvWan}萬 - ${loanWan}萬</span>
