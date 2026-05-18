@@ -11,7 +11,7 @@
             color: #2d3748;
             margin: 0;
             padding: 24px;
-            font-size: 12px;
+            font-size: 14px; /* 優化提升文字大小 */
         }
         .container {
             max-width: 1280px;
@@ -25,10 +25,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-b: 2px solid #e2e8f0;
+            border-bottom: 2px solid #edf2f7;
             padding-bottom: 20px;
             margin-bottom: 30px;
-            border-bottom: 2px solid #edf2f7;
         }
         h1 {
             font-size: 2.2rem;
@@ -37,7 +36,7 @@
             font-weight: 800;
         }
         .btn-pdf {
-            background-color: #2b6cb0;
+            background-color: #e53e3e; /* 亮紅色代表 PDF */
             color: white;
             border: none;
             padding: 14px 28px;
@@ -46,8 +45,9 @@
             border-radius: 12px;
             cursor: pointer;
             transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
         }
-        .btn-pdf:hover { background-color: #2c5282; }
+        .btn-pdf:hover { background-color: #c53030; }
         
         .grid-inputs {
             display: grid;
@@ -62,7 +62,7 @@
             border-radius: 16px;
         }
         .card-label {
-            font-size: 1rem;
+            font-size: 1.05rem;
             color: #718096;
             font-weight: bold;
             margin-bottom: 8px;
@@ -81,7 +81,7 @@
             width: 100%;
             border: none;
             border-bottom: 2px solid #cbd5e0;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: #2d3748;
             outline: none;
@@ -102,15 +102,20 @@
         }
         .res-blue { background-color: #ebf8ff; border: 2px solid #bee3f8; color: #2b6cb0; }
         .res-green { background-color: #f0fff4; border: 2px solid #c6f6d5; color: #38a169; }
-        .res-label { font-size: 1.1rem; margin-bottom: 6px; color: inherit; opacity: 0.9; }
-        .res-value { font-size: 2.2rem; font-weight: 900; }
+        .res-label { font-size: 1.15rem; margin-bottom: 6px; color: inherit; opacity: 0.9; }
+        .res-value { font-size: 2.3rem; font-weight: 900; }
 
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
         .slider-section {
             background: #1a202c;
             color: white;
             padding: 25px;
             border-radius: 18px;
-            margin-bottom: 35px;
         }
         .slider-header {
             display: flex;
@@ -125,9 +130,73 @@
             height: 8px;
         }
 
+        /* 每年手續費模組樣式 */
+        .fee-section {
+            background: #2d3748;
+            color: white;
+            padding: 25px;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .fee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+        .fee-toggle-container {
+            display: flex;
+            background: #4a5568;
+            padding: 4px;
+            border-radius: 10px;
+        }
+        .fee-btn {
+            background: transparent;
+            color: #cbd5e0;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .fee-btn.active {
+            background: #3182ce;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .fee-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #1a202c;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #4a5568;
+        }
+        .fee-input-wrapper span {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #a0aec0;
+            margin-right: 8px;
+        }
+        .fee-input-wrapper input {
+            background: transparent;
+            border: none;
+            color: #63b3ed;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 100%;
+            outline: none;
+        }
+
         .main-layout {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 1fr 1.6fr;
             gap: 30px;
         }
 
@@ -168,21 +237,26 @@
             border: 1px solid #edf2f7;
         }
         .csv-col { display: flex; flex-direction: column; }
-        .csv-col label { font-size: 0.9rem; color: #718096; font-weight: bold; margin-bottom: 4px; }
+        .csv-col label { font-size: 0.95rem; color: #718096; font-weight: bold; margin-bottom: 4px; }
         .csv-col div { display: flex; align-items: center; }
-        .csv-input-yr { width: 55px; font-size: 1.2rem; font-weight: bold; border: none; border-bottom: 2px solid #cbd5e0; background: transparent; text-align: center; color: #2b6cb0;}
-        .csv-input-val { width: 120px; font-size: 1.2rem; font-weight: bold; border: none; border-bottom: 2px solid #cbd5e0; background: transparent; }
+        .csv-input-yr { width: 55px; font-size: 1.3rem; font-weight: bold; border: none; border-bottom: 2px solid #cbd5e0; background: transparent; text-align: center; color: #2b6cb0;}
+        .csv-input-val { width: 130px; font-size: 1.3rem; font-weight: bold; border: none; border-bottom: 2px solid #cbd5e0; background: transparent; }
         .btn-del {
-            background: none;
-            border: none;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
             color: #e53e3e;
-            font-size: 1.3rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 1.2rem;
             cursor: pointer;
-            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-left: auto;
-            padding: 5px;
+            transition: all 0.2s;
         }
-        .btn-del:hover { color: #c53030; }
+        .btn-del:hover { background: #e53e3e; color: white; border-color: #e53e3e; }
 
         .table-section {
             background: white;
@@ -199,21 +273,40 @@
             color: #1a365d;
         }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f7fafc; padding: 18px 25px; font-size: 1.05rem; color: #4a5568; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 22px 25px; font-size: 1.2rem; border-bottom: 1px solid #edf2f7; }
-        .td-year { font-weight: 900; color: #2b6cb0; font-size: 1.3rem; }
+        th { background: #f7fafc; padding: 18px 25px; font-size: 1.1rem; color: #4a5568; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 22px 25px; font-size: 1.3rem; border-bottom: 1px solid #edf2f7; }
+        .td-year { font-weight: 900; color: #2b6cb0; font-size: 1.4rem; display: flex; align-items: center; gap: 8px;}
         .td-cost { color: #e53e3e; font-weight: bold; }
         .td-value { font-weight: 900; color: #2d3748; }
         
         .badge-positive { background-color: #c6f6d5; color: #22543d; padding: 8px 14px; border-radius: 10px; font-weight: bold; }
         .badge-negative { background-color: #fed7d7; color: #742a2a; padding: 8px 14px; border-radius: 10px; font-weight: bold; }
 
+        /* 展開算式的容器樣式 */
+        .formula-container {
+            background-color: #f7fafc;
+            border-top: 1px dashed #e2e8f0;
+            padding: 20px 30px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #4a5568;
+        }
+        .formula-container ul {
+            padding-left: 0;
+            list-style: none;
+            margin: 10px 0 0 0;
+        }
+        .formula-container li {
+            margin-bottom: 12px;
+        }
+
         @media print {
             body { background: white; padding: 0; }
             .container { box-shadow: none; padding: 0; }
-            .btn-pdf, .btn-add, .btn-del { display: none !important; }
+            .btn-pdf, .btn-add, .btn-del, .fee-toggle-container { display: none !important; }
             .csv-section { border: none; padding: 0; }
             .csv-row { border: none; background: transparent; padding: 5px 0; }
+            .formula-row { display: table-row !important; } /* 列印時自動展開細節方便審閱 */
         }
     </style>
 </head>
@@ -222,7 +315,7 @@
 <div class="container">
     <header>
         <div>
-            <h1>保費融資大字分析儀表板</h1>
+            <h1 style="font-size: 2.4rem;">保費融資計算機</h1>
         </div>
         <button class="btn-pdf" onclick="window.print()">匯出 PDF 報告</button>
     </header>
@@ -271,13 +364,30 @@
         </div>
     </div>
 
-    <div class="slider-section">
-        <div class="slider-header">
-            <span>貸款年利率 (Loan Interest)</span>
-            <span id="lblInterestRate" style="color:#63b3ed; font-size:1.6rem;">2.7%</span>
+    <div class="control-panel">
+        <div class="slider-section">
+            <div class="slider-header">
+                <span>貸款年利率 (Loan Interest)</span>
+                <span id="lblInterestRate" style="color:#63b3ed; font-size:1.6rem;">2.7%</span>
+            </div>
+            <div class="slider-wrapper">
+                <input type="range" id="interestRate" min="0" max="8" step="0.1" value="2.7" oninput="calculateAll()">
+            </div>
         </div>
-        <div class="slider-wrapper">
-            <input type="range" id="interestRate" min="0" max="8" step="0.1" value="2.7" oninput="calculateAll()">
+
+        <div class="fee-section">
+            <div class="fee-header">
+                <span>每年手續費 (Annual Service Fee)</span>
+                <div class="fee-toggle-container">
+                    <button id="btnFeePercent" class="fee-btn active" onclick="setFeeMode('percent')">按比例 (%)</button>
+                    <button id="btnFeeFixed" class="fee-btn" onclick="setFeeMode('fixed')">固定收費 ($)</button>
+                </div>
+            </div>
+            <div class="fee-input-wrapper">
+                <span id="feeSymbol">%</span>
+                <input type="number" id="annualFeeValue" value="0.1" step="0.01" oninput="calculateAll()">
+                <span id="feeSuffix" style="font-size: 0.95rem; margin-left: 10px; color:#a0aec0;">貸款額</span>
+            </div>
         </div>
     </div>
 
@@ -291,7 +401,7 @@
         </div>
 
         <div class="table-section">
-            <div class="table-title">年度分析明細</div>
+            <div class="table-title">年度分析明細 (點擊各行可展開/收合詳細算式)</div>
             <table id="resultTable">
                 <thead>
                     <tr>
@@ -301,7 +411,7 @@
                         <th style="text-align:right; padding-right:25px;">槓桿回報率 %</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody id="resultTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -315,6 +425,9 @@
         { year: 10, csv: 2003704 }
     ];
 
+    let annualFeeMode = 'percent'; // 'percent' 或 'fixed'
+    let openRows = {}; // 用於追蹤各年期公式的展開狀態
+
     function init() {
         const container = document.getElementById('csvRowsContainer');
         container.innerHTML = '';
@@ -322,8 +435,38 @@
         calculateAll();
     }
 
+    function setFeeMode(mode) {
+        annualFeeMode = mode;
+        const btnPercent = document.getElementById('btnFeePercent');
+        const btnFixed = document.getElementById('btnFeeFixed');
+        const feeSymbol = document.getElementById('feeSymbol');
+        const feeSuffix = document.getElementById('feeSuffix');
+        const feeInput = document.getElementById('annualFeeValue');
+
+        if (mode === 'percent') {
+            btnPercent.classList.add('active');
+            btnFixed.classList.remove('active');
+            feeSymbol.innerText = '%';
+            feeSuffix.innerText = 'of Loan Amount';
+            feeInput.value = "0.1";
+        } else {
+            btnPercent.classList.remove('active');
+            btnFixed.classList.add('active');
+            feeSymbol.innerText = '$';
+            feeSuffix.innerText = '固定手續費';
+            feeInput.value = "1000";
+        }
+        calculateAll();
+    }
+
     function addCsvRow() {
-        createRowHTML(1, 0);
+        const yrInputs = document.querySelectorAll('.csv-input-yr');
+        let nextYear = 1;
+        if(yrInputs.length > 0) {
+            const years = Array.from(yrInputs).map(input => parseInt(input.value) || 0);
+            nextYear = Math.max(...years) + 1;
+        }
+        createRowHTML(nextYear, 0);
         calculateAll();
     }
 
@@ -336,13 +479,13 @@
                 <label>年期</label>
                 <div>
                     <input type="number" class="csv-input-yr" value="${year}" oninput="calculateAll()">
-                    <span style="font-size:1rem; color:#718096; font-weight:bold; margin-left:2px;">年</span>
+                    <span style="font-size:1.1rem; color:#718096; font-weight:bold; margin-left:2px;">年</span>
                 </div>
             </div>
             <div class="csv-col" style="flex:1; margin-left:10px;">
                 <label>預期價值 ($)</label>
                 <div>
-                    <span style="font-size:1.1rem; color:#718096; font-weight:bold; margin-right:4px;">$</span>
+                    <span style="font-size:1.2rem; color:#718096; font-weight:bold; margin-right:4px;">$</span>
                     <input type="number" class="csv-input-val" value="${csv}" oninput="calculateAll()">
                 </div>
             </div>
@@ -358,6 +501,21 @@
 
     function formatWan(val) { return (val / 10000).toFixed(1) + ' 萬'; }
 
+    // 展開與收合詳細算式切換
+    function toggleFormula(year) {
+        const formulaRow = document.getElementById(`formula-${year}`);
+        const arrow = document.getElementById(`arrow-${year}`);
+        if (formulaRow.style.display === 'none') {
+            formulaRow.style.display = 'table-row';
+            arrow.innerText = '▼';
+            openRows[year] = true;
+        } else {
+            formulaRow.style.display = 'none';
+            arrow.innerText = '▶';
+            openRows[year] = false;
+        }
+    }
+
     function calculateAll() {
         const totalPremium = parseFloat(document.getElementById('totalPremium').value) || 0;
         const discountedPremium = parseFloat(document.getElementById('discountedPremium').value) || 0;
@@ -365,6 +523,7 @@
         const ltvRate = parseFloat(document.getElementById('ltvRate').value) || 0;
         const applicationFee = parseFloat(document.getElementById('applicationFee').value) || 0;
         const interestRate = parseFloat(document.getElementById('interestRate').value) || 0;
+        const annualFeeValue = parseFloat(document.getElementById('annualFeeValue').value) || 0;
 
         document.getElementById('lblInterestRate').innerText = interestRate + '%';
 
@@ -386,20 +545,45 @@
 
         rowsData.sort((a, b) => a.year - b.year);
 
-        const tbody = document.querySelector('#resultTable tbody');
+        const tbody = document.getElementById('resultTableBody');
         tbody.innerHTML = '';
 
         rowsData.forEach(row => {
             if(row.year <= 0) return;
-            const annualCost = loanAmount * (interestRate / 100) + (loanAmount * 0.001); 
+
+            // 1. 計算每年利息支出
+            const annualInterest = loanAmount * (interestRate / 100);
+            
+            // 2. 計算每年手續費 (按比例或固定收費)
+            const annualServiceFee = annualFeeMode === 'percent' 
+                ? loanAmount * (annualFeeValue / 100) 
+                : annualFeeValue;
+
+            // 3. 每年總成本與累計持有成本
+            const annualCost = annualInterest + annualServiceFee;
             const cumulativeCost = annualCost * row.year;
+            
+            // 4. 還款後淨價值與利潤
             const valueAfterRepay = row.csv - loanAmount;
             const netProfit = valueAfterRepay - initialPrincipal - cumulativeCost;
             const returnRate = (netProfit / (initialPrincipal || 1)) * 100;
 
+            // 算式展示專用的手續費文字描述
+            const feeFormulaText = annualFeeMode === 'percent'
+                ? `貸款額 $${Math.round(loanAmount).toLocaleString()} &times; ${annualFeeValue}%`
+                : `固定收費 $${annualFeeValue.toLocaleString()}`;
+
+            // 創建主數據行
             const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.onclick = () => toggleFormula(row.year);
+            
+            const isRowOpen = openRows[row.year] ? '▼' : '▶';
             tr.innerHTML = `
-                <td class="td-year" style="padding-left:25px;">${row.year} 年</td>
+                <td class="td-year" style="padding-left:25px;">
+                    <span id="arrow-${row.year}" style="color: #4a5568; font-size: 0.9rem; width: 15px; display: inline-block;">${isRowOpen}</span>
+                    ${row.year} 年
+                </td>
                 <td class="td-cost">${formatWan(cumulativeCost)}</td>
                 <td class="td-value">${formatWan(valueAfterRepay)}</td>
                 <td style="text-align:right; padding-right:25px;">
@@ -409,8 +593,66 @@
                 </td>
             `;
             tbody.appendChild(tr);
+
+            // 創建可摺疊隱藏的詳細公式行
+            const formulaTr = document.createElement('tr');
+            formulaTr.id = `formula-${row.year}`;
+            formulaTr.className = 'formula-row';
+            formulaTr.style.display = openRows[row.year] ? 'table-row' : 'none';
+            formulaTr.innerHTML = `
+                <td colspan="4" style="padding: 0; background: #fafafa;">
+                    <div class="formula-container">
+                        <div style="font-weight: 800; color: #2b6cb0; margin-bottom: 12px; font-size: 1.15rem;">
+                            📊 第 ${row.year} 年 詳細計算明細與公式步驟：
+                        </div>
+                        <ul>
+                            <li>
+                                <strong>1. 預計貸款金額：</strong><br>
+                                首日退保價值 ($${day1Csv.toLocaleString()}) &times; 融資比率 (${ltvRate}%) 
+                                = <span style="color:#2b6cb0; font-weight:bold;">$${Math.round(loanAmount).toLocaleString()}</span>
+                            </li>
+                            <li>
+                                <strong>2. 初始投入本金：</strong><br>
+                                折扣後保費 ($${discountedPremium.toLocaleString()}) - 貸款金額 ($${Math.round(loanAmount).toLocaleString()}) + 申請手續費 ($${applicationFee.toLocaleString()}) 
+                                = <span style="color:#38a169; font-weight:bold;">$${Math.round(initialPrincipal).toLocaleString()}</span>
+                            </li>
+                            <li>
+                                <strong>3. 每年持有成本：</strong><br>
+                                每年利息 ($${Math.round(annualInterest).toLocaleString()}) + 每年手續費 ($${Math.round(annualServiceFee).toLocaleString()}) 
+                                = <span style="color:#e53e3e; font-weight:bold;">$${Math.round(annualCost).toLocaleString()} / 年</span>
+                                <div style="font-size: 0.95rem; color: #718096; padding-left: 15px; margin-top: 4px;">
+                                    &bull; 利息實算: $${Math.round(loanAmount).toLocaleString()} &times; ${interestRate}% = $${Math.round(annualInterest).toLocaleString()}<br>
+                                    &bull; 手續費實算: ${feeFormulaText} = $${Math.round(annualServiceFee).toLocaleString()}
+                                </div>
+                            </li>
+                            <li>
+                                <strong>4. 累計持有成本 (C)：</strong><br>
+                                每年總成本 ($${Math.round(annualCost).toLocaleString()}) &times; 持有年期 (${row.year} 年) 
+                                = <span style="color:#e53e3e; font-weight:bold;">$${Math.round(cumulativeCost).toLocaleString()}</span>
+                            </li>
+                            <li>
+                                <strong>5. 還款後價值 (V)：</strong><br>
+                                預期價值 ($${row.csv.toLocaleString()}) - 貸款金額 ($${Math.round(loanAmount).toLocaleString()}) 
+                                = <span style="color:#2d3748; font-weight:bold;">$${Math.round(valueAfterRepay).toLocaleString()}</span>
+                            </li>
+                            <li>
+                                <strong>6. 槓桿淨利潤 (P)：</strong><br>
+                                還款後價值 ($${Math.round(valueAfterRepay).toLocaleString()}) - 初始投入本金 ($${Math.round(initialPrincipal).toLocaleString()}) - 累計成本 ($${Math.round(cumulativeCost).toLocaleString()}) 
+                                = <span style="color:${netProfit >= 0 ? '#38a169' : '#e53e3e'}; font-weight:bold;">$${Math.round(netProfit).toLocaleString()}</span>
+                            </li>
+                            <li>
+                                <strong>7. 槓桿回報率 (%)：</strong><br>
+                                [ 槓桿淨利潤 ($${Math.round(netProfit).toLocaleString()}) / 初始投入本金 ($${Math.round(initialPrincipal).toLocaleString()}) ] &times; 100% 
+                                = <span style="font-weight:900; color:${netProfit >= 0 ? '#22543d' : '#742a2a'};">${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(2)}%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(formulaTr);
         });
     }
+
     init();
 </script>
 </body>
