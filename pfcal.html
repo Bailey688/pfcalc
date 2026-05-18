@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保費融資計算機</title>
+    <!-- 載入外部庫：Tailwind CSS, React 18, Chart.js, html2pdf.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.9/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 載入 Chart.js 標籤插件 -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- 載入 PDF 導出套件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* PDF 導出時，暫時隱藏特定控制項 */
+        .pdf-mode .no-pdf {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-[#f8f9fc] text-base">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // 安全註冊 Chart.js DataLabels 插件，防止未載入時崩潰
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        }
+
+        const formatWan = (val) => (val / 10000).toFixed(1) + ' 萬';
+        const formatCurrency = (val) => '$' + Math.round(val || 0).toLocaleString();
+
+        // 獨立、安全的數字輸入組件
+        const SmartInput = ({ value, onChange, className, type = "number", onFocusSelect = true }) => {
+            const [displayValue, setDisplayValue] = useState(value.toString());
+
+            useEffect(() => {
+                if (parseFloat(displayValue) !== value) {
+                    setDisplayValue(value.toString());
+                }
+            }, [value]);
+
+            const handleChange = (e) => {
+                const val = e.target.value;
+                setDisplayValue(val);
+                const parsed = parseFloat(val);
+                onChange(isNaN(parsed) ? 0 : parsed);
+            };
+
+            const handleFocus = (e) => {
+                if (onFocusSelect) e.target.select();
+                if (value === 0) setDisplayValue('');
+            };
+
+            const handleBlur = () => {
+                if (displayValue === '' || isNaN(parseFloat(displayValue))) {
+                    setDisplayValue('0');
+                    onChange(0);
+                }
+            };
+
+            return (
+                <input
+                    type={type}
+                    className={className}
+                    value={displayValue}
+                    onChange={handleChange}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                />
+            );
+        };
+
+        // 卡片輸入框組件 (字體加大)
+        const InputCard = ({ label, value, color = "text-slate-700", onChange }) => {
+            return (
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <span class="text-base font-black text-slate-400 mb-2">{label}</span>
+                    <div class="flex items-center gap-2">
+                        <span class={`text-xl font-bold ${color}`}>$</span>
+                        <SmartInput
+                            class="w-full bg-transparent border-none text-xl lg:text-2xl font-black text-slate-800 outline-none"
+                            value={value}
+                            onChange={onChange}
+                        />
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [isExporting, setIsExporting] = useState(false);
+            const [expandedRow, setExpandedRow] = useState(null);
+
+            const [params, setParams] = useState({
+                totalPremium: 1373000,
+                discountedPremium: 1350000,
+                day1Csv: 1100000,
+                ltvRate: 90,
+                applicationFee: 5000,
+                interestRate: 2.7,
+                annualFeeMode: 'percent', 
+                annualServiceFeeRate: 0.1, 
+                annualServiceFeeFixed: 1000 
+            });
+
+            const [valueRows, setValueRows] = useState([
+                { year: 3, csv: 1420000 },
+                { year: 5, csv: 1689727 }, 
+                { year: 8, csv: 1850000 },
+                { year: 10, csv: 2003704 }
+            ]);
+
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+
+            const loanAmount = params.day1Csv * (params.ltvRate / 100);
+            const initialPrincipal = params.discountedPremium - loanAmount + params.applicationFee;
+
+            const calculateData = () => {
+                return valueRows.sort((a, b) => a.year - b.year).map(row => {
+                    const annualInterest = loanAmount * (params.interestRate / 100);
+                    const annualServiceFee = params.annualFeeMode === 'percent' 
+                        ? loanAmount * (params.annualServiceFeeRate / 100)
+                        : params.annualServiceFeeFixed;
+
+                    const totalAnnualCost = annualInterest + annualServiceFee;
+                    const cumulativeCost = totalAnnualCost * row.year;
+                    const totalOutlay = initialPrincipal + cumulativeCost;
+                    const valueAfterRepay = row.csv - loanAmount;
+                    const netProfit = valueAfterRepay - initialPrincipal - cumulativeCost;
+                    const returnRate = (netProfit / (initialPrincipal || 1)) * 100;
+                    const annualReturn = (Math.pow(Math.max(0.0001, valueAfterRepay / (totalOutlay || 1)), 1 / row.year) - 1) * 100;
+                    
+                    return { 
+                        ...row, 
+                        cumulativeCost, 
+                        totalOutlay, 
+                        valueAfterRepay, 
+                        netProfit, 
+                        returnRate,
+                        annualReturn,
+                        annualInterest,
+                        annualServiceFee
+                    };
+                });
+            };
+
+            const results = calculateData();
+
+            // 繪製 Chart.js
+            useEffect(() => {
+                if (!chartRef.current) return;
+                if (chartInstance.current) chartInstance.current.destroy();
+
+                const ctx = chartRef.current.getContext('2d');
+                chartInstance.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: results.map(r => `第 ${r.year} 年`),
+                        datasets: [
+                            {
+                                label: '本金',
+                                data: results.map(r => initialPrincipal / 10000),
+                                backgroundColor: '#3b82f6',
+                                stack: 'Stack 0',
+                                barThickness: 45,
+                                order: 2,
+                                datalabels: { display: false }
+                            },
+                            {
+                                label: '收益',
+                                data: results.map(r => Math.max(0, r.netProfit / 10000)),
+                                backgroundColor: '#10b981',
+                                stack: 'Stack 0',
+                                barThickness: 45,
+                                order: 3,
+                                datalabels: { display: false }
+                            },
+                            {
+                                label: '本金 + 累計成本線',
+                                data: results.map(r => (initialPrincipal + r.cumulativeCost) / 10000),
+                                type: 'line',
+                                borderColor: '#ef4444',
+                                borderWidth: 3,
+                                borderDash: [6, 4],
+                                pointBackgroundColor: '#ef4444',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 6,
+                                pointHoverRadius: 8,
+                                fill: false,
+                                order: 1,
+                                datalabels: { display: false }
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    boxWidth: 15, 
+                                    font: { weight: 'bold', size: 14 }
+                                } 
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(1) + ' 萬';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 6,
+                                color: '#1e293b',
+                                font: { weight: 'bold', size: 13 },
+                                formatter: function(value, context) {
+                                    if (context.datasetIndex === 1) { 
+                                        const r = results[context.dataIndex];
+                                        const valueText = (r.valueAfterRepay / 10000).toFixed(1) + '萬';
+                                        const multiple = (r.valueAfterRepay / (initialPrincipal || 1)).toFixed(1);
+                                        return `${valueText} (${multiple}x)`;
+                                    }
+                                    return null;
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                grid: { display: false },
+                                ticks: { font: { size: 14, weight: 'bold' } }
+                            },
+                            y: { 
+                                grid: { color: '#f1f5f9' }, 
+                                ticks: { 
+                                    callback: (val) => val + ' 萬',
+                                    font: { size: 13 }
+                                },
+                                grace: '15%' 
+                            }
+                        }
+                    }
+                });
+            }, [params, valueRows, initialPrincipal]);
+
+            // 執行匯出 PDF
+            const handleExportPDF = () => {
+                setIsExporting(true);
+                const element = document.getElementById('pdf-container');
+                document.body.classList.add('pdf-mode');
+
+                const opt = {
+                    margin:       [10, 10, 10, 10],
+                    filename:     '保費融資分析報告.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, logging: false },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                };
+
+                setTimeout(() => {
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        document.body.classList.remove('pdf-mode');
+                        setIsExporting(false);
+                    }).catch(err => {
+                        console.error(err);
+                        document.body.classList.remove('pdf-mode');
+                        setIsExporting(false);
+                    });
+                }, 400);
+            };
+
+            return (
+                <div class="min-h-screen bg-[#f8f9fc] text-slate-700 p-4 lg:p-10 font-sans">
+                    <div id="pdf-container" class="max-w-6xl mx-auto space-y-6 bg-[#f8f9fc] p-2 rounded-3xl">
+                        
+                        {/* 頂部標題與按鈕區 */}
+                        <header class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                                        <line x1="9" y1="9" x2="15" y2="9"></line>
+                                        <line x1="9" y1="13" x2="15" y2="13"></line>
+                                        <line x1="9" y1="17" x2="15" y2="17"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 class="text-3xl font-black text-slate-800">保費融資計算機</h1>
+                                    <p class="text-base text-slate-400 font-bold tracking-tight uppercase">Premium Finance Calculator</p>
+                                </div>
+                            </div>
+                            
+                            {/* PDF 匯出按鈕 */}
+                            <button 
+                                onClick={handleExportPDF}
+                                class="no-pdf flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-3 rounded-2xl font-black hover:from-red-600 hover:to-rose-700 transition active:scale-95 shadow-lg shadow-red-100 text-base"
+                                disabled={isExporting}
+                            >
+                                {isExporting ? (
+                                    <span class="flex items-center gap-2">
+                                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        產生 PDF 報告中...
+                                    </span>
+                                ) : (
+                                    <span class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        </svg>
+                                        匯出 PDF 報告
+                                    </span>
+                                )}
+                            </button>
+                        </header>
+
+                        {/* 1. 保費詳情 */}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
+                            <InputCard label="總保費" value={params.totalPremium} onChange={(v) => setParams({...params, totalPremium: v})} />
+                            <InputCard label="折扣後保費" value={params.discountedPremium} color="text-blue-600" onChange={(v) => setParams({...params, discountedPremium: v})} />
+                            <InputCard label="首日退保價值" value={params.day1Csv} onChange={(v) => setParams({...params, day1Csv: v})} />
+                            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                                <span class="text-base font-black text-slate-400 mb-2">融資比率 (%)</span>
+                                <div class="flex items-center gap-2">
+                                    <SmartInput
+                                        class="w-full bg-transparent border-none text-xl lg:text-2xl font-black text-slate-800 outline-none"
+                                        value={params.ltvRate}
+                                        onChange={(v) => setParams({...params, ltvRate: v})}
+                                    />
+                                    <span class="text-lg font-bold text-slate-400">%</span>
+                                </div>
+                            </div>
+                            <InputCard label="申請手續費" value={params.applicationFee} onChange={(v) => setParams({...params, applicationFee: v})} />
+                        </div>
+
+                        {/* 2. 利率與持有成本 */}
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+                            {/* 左側資訊區 */}
+                            <div class="md:col-span-3 bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col justify-center shadow-sm">
+                                <p class="text-sm font-black text-blue-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                                    預計貸款金額
+                                </p>
+                                <p class="text-3xl font-black text-blue-700">{formatCurrency(loanAmount)}</p>
+                            </div>
+                            <div class="md:col-span-3 bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 flex flex-col justify-center shadow-sm">
+                                <p class="text-sm font-black text-emerald-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                    初始投入本金
+                                </p>
+                                <p class="text-3xl font-black text-emerald-700">{formatCurrency(initialPrincipal)}</p>
+                            </div>
+
+                            {/* 右側利率設定 */}
+                            <div class="md:col-span-6 bg-slate-900 p-6 rounded-[2rem] shadow-xl text-white space-y-5">
+                                <div>
+                                    <p class="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between">
+                                        <span>貸款年利率 (%)</span>
+                                        <span class="text-blue-400 font-black text-lg">{params.interestRate}%</span>
+                                    </p>
+                                    <input 
+                                        type="range" min="0" max="8" step="0.1"
+                                        class="w-full accent-blue-500 h-1.5 no-pdf cursor-pointer"
+                                        value={params.interestRate}
+                                        onChange={(e) => setParams({...params, interestRate: parseFloat(e.target.value)})}
+                                    />
+                                </div>
+                                <div class="h-px bg-slate-800 w-full"></div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <p class="text-sm font-black text-slate-400 uppercase tracking-widest">每年手續費設定</p>
+                                        <div class="flex bg-slate-800 p-1 rounded-full text-xs font-black no-pdf">
+                                            <button 
+                                                onClick={() => setParams({...params, annualFeeMode: 'percent'})}
+                                                class={`px-4 py-1.5 rounded-full transition ${params.annualFeeMode === 'percent' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}
+                                            >
+                                                按比例 (%)
+                                            </button>
+                                            <button 
+                                                onClick={() => setParams({...params, annualFeeMode: 'fixed'})}
+                                                class={`px-4 py-1.5 rounded-full transition ${params.annualFeeMode === 'fixed' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}
+                                            >
+                                                固定金額 ($)
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {params.annualFeeMode === 'percent' ? (
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-base font-bold text-slate-200">每年手續費率</span>
+                                                <span class="text-emerald-400 font-black text-lg">{params.annualServiceFeeRate}%</span>
+                                            </div>
+                                            <input 
+                                                type="range" min="0" max="2" step="0.01"
+                                                class="w-full accent-emerald-500 h-1.5 no-pdf cursor-pointer"
+                                                value={params.annualServiceFeeRate}
+                                                onChange={(e) => setParams({...params, annualServiceFeeRate: parseFloat(e.target.value)})}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-700">
+                                            <span class="text-slate-400 font-black text-lg">$</span>
+                                            <SmartInput 
+                                                class="bg-transparent border-none text-emerald-400 font-black text-lg outline-none w-full"
+                                                value={params.annualServiceFeeFixed}
+                                                onChange={(v) => setParams({...params, annualServiceFeeFixed: v})}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. 數據錄入與明細 */}
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                            
+                            {/* 左側：現金價值總額清單 (文字與按鈕修復) */}
+                            <div class="lg:col-span-5 bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 order-1">
+                                <div class="flex justify-between items-center mb-4 px-2">
+                                    <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                                        <svg class="text-emerald-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                        預期現金價值總額
+                                    </h3>
+                                    <button 
+                                        onClick={() => {
+                                            const nextYear = valueRows.length > 0 ? Math.max(...valueRows.map(r => r.year)) + 1 : 1;
+                                            setValueRows([...valueRows, { year: nextYear, csv: 0 }]);
+                                        }}
+                                        class="no-pdf w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-100 transition shadow-sm"
+                                        title="新增年份"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></svg>
+                                    </button>
+                                </div>
+
+                                {/* 表頭 */}
+                                <div class="grid grid-cols-12 gap-2 px-3 py-2 text-sm font-black text-slate-400 border-b border-slate-100 mb-3 uppercase tracking-wider">
+                                    <div class="col-span-4 text-center">年期 (年)</div>
+                                    <div class="col-span-6 pl-4">預期現金價值 (元)</div>
+                                    <div class="col-span-2 text-center no-pdf">操作</div>
+                                </div>
+                                
+                                <div class="space-y-3 max-h-[450px] overflow-y-auto pr-1 scrollbar-hide">
+                                    {valueRows.map((row, idx) => (
+                                        <div key={idx} class="grid grid-cols-12 gap-2 items-center bg-slate-50 p-2.5 rounded-2xl border border-transparent focus-within:border-blue-100 focus-within:bg-white transition-all">
+                                            
+                                            {/* 年期欄位：顯示「第 X 年」 */}
+                                            <div class="col-span-4 flex items-center justify-center bg-slate-100 focus-within:bg-blue-50/50 rounded-xl px-2 py-1.5">
+                                                <span class="text-sm font-bold text-slate-400 mr-1">第</span>
+                                                <SmartInput 
+                                                    class="w-10 bg-transparent border-none text-base font-black text-blue-600 outline-none text-center" 
+                                                    value={row.year} 
+                                                    onChange={(v) => {
+                                                        const newRows = [...valueRows];
+                                                        newRows[idx].year = v;
+                                                        setValueRows(newRows);
+                                                    }}
+                                                />
+                                                <span class="text-sm font-black text-slate-500 ml-1">年</span>
+                                            </div>
+
+                                            {/* 預期現金價值 */}
+                                            <div class="col-span-6 flex items-center bg-slate-100 focus-within:bg-blue-50/50 rounded-xl px-3 py-1.5">
+                                                <span class="text-sm font-black text-slate-400 mr-2">$</span>
+                                                <SmartInput 
+                                                    class="w-full bg-transparent border-none text-base font-black text-slate-700 outline-none" 
+                                                    value={row.csv} 
+                                                    onChange={(v) => {
+                                                        const newRows = [...valueRows];
+                                                        newRows[idx].csv = v;
+                                                        setValueRows(newRows);
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* 安全且穩固的紅色垃圾桶刪除按鈕 */}
+                                            <div class="col-span-2 text-center no-pdf">
+                                                <button 
+                                                    onClick={() => setValueRows(valueRows.filter((_, i) => i !== idx))} 
+                                                    class="w-9 h-9 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-xl flex items-center justify-center transition-all mx-auto border border-red-100 hover:border-red-500 shadow-sm"
+                                                    title="刪除此行"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    ))}
+                                    {valueRows.length === 0 && (
+                                        <div class="text-center py-8 text-slate-400 font-bold text-sm">
+                                            目前無數據，請點擊右上角新增
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 右側：年度分析明細 */}
+                            <div class="lg:col-span-7 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden order-2">
+                                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                                    <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                                        <svg class="text-blue-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                        年度分析明細
+                                    </h3>
+                                    <span class="text-xs text-slate-400 font-bold no-pdf">點擊各行可展開/收合明細</span>
+                                </div>
+                                
+                                <div class="overflow-x-auto">
+                                    <div class="min-w-[650px]">
+                                        <div class="grid grid-cols-6 p-4 px-8 text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">
+                                            <div>年期</div>
+                                            <div>初始本金</div>
+                                            <div>累計成本</div>
+                                            <div>預期現金總額</div>
+                                            <div>還款後價值</div>
+                                            <div class="text-right">槓桿回報</div>
+                                        </div>
+                                        
+                                        <div class="divide-y divide-slate-50">
+                                            {results.map((r, i) => (
+                                                <div key={i} class="group">
+                                                    <div 
+                                                        class={`grid grid-cols-6 px-8 py-5 items-center cursor-pointer hover:bg-slate-50 transition-all ${expandedRow === i ? 'bg-slate-50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
+                                                        onClick={() => setExpandedRow(expandedRow === i ? null : i)}
+                                                    >
+                                                        <div class="font-black text-blue-600 text-xl">{r.year} 年</div>
+                                                        <div class="font-bold text-slate-700 text-base">{formatWan(initialPrincipal)}</div>
+                                                        <div class="text-red-500 text-sm font-bold">{formatWan(r.cumulativeCost)}</div>
+                                                        <div class="font-bold text-slate-700 text-base">{formatWan(r.csv)}</div>
+                                                        <div class="font-black text-blue-600 text-base">{formatWan(r.valueAfterRepay)}</div>
+                                                        
+                                                        {/* 回報率 */}
+                                                        <div class="text-right flex flex-col items-end">
+                                                            <span class={`text-sm font-black px-3 py-1.5 rounded-full ${r.returnRate >= 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                                                                {r.returnRate >= 0 ? '+' : ''}{r.returnRate.toFixed(1)}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {expandedRow === i && (
+                                                        <div class="bg-slate-50/50 p-6 px-12 grid grid-cols-2 md:grid-cols-4 gap-6 border-t border-slate-100">
+                                                            <div>
+                                                                <p class="text-xs font-black text-slate-400 uppercase mb-1">淨利潤金額</p>
+                                                                <p class="text-lg font-black text-slate-800">{formatCurrency(r.netProfit)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-black text-slate-400 uppercase mb-1">估計年化 (IRR)</p>
+                                                                <p class="text-lg font-black text-emerald-500">{r.annualReturn.toFixed(2)}%</p>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-black text-slate-400 uppercase mb-1">每年利息支出</p>
+                                                                <p class="text-lg font-black text-slate-600">{formatCurrency(r.annualInterest)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-black text-slate-400 uppercase mb-1">每年手續費</p>
+                                                                <p class="text-lg font-black text-slate-600">{formatCurrency(r.annualServiceFee)}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. 圖表展示 */}
+                        <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 text-sm font-black text-slate-800 uppercase tracking-widest">
+                                <h3 class="text-base flex items-center gap-2">
+                                    <svg class="text-blue-600" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                                    正收益增長與總持有成本分析 (單位: 萬元)
+                                </h3>
+                            </div>
+                            <div class="h-96 relative">
+                                <canvas ref={chartRef}></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
