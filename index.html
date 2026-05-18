@@ -11,7 +11,7 @@
             color: #2d3748;
             margin: 0;
             padding: 24px;
-            font-size: 14px; /* 優化提升文字大小 */
+            font-size: 15px;
         }
         .container {
             max-width: 1280px;
@@ -36,7 +36,7 @@
             font-weight: 800;
         }
         .btn-pdf {
-            background-color: #e53e3e; /* 亮紅色代表 PDF */
+            background-color: #e53e3e;
             color: white;
             border: none;
             padding: 14px 28px;
@@ -130,7 +130,6 @@
             height: 8px;
         }
 
-        /* 每年手續費模組樣式 */
         .fee-section {
             background: #2d3748;
             color: white;
@@ -196,7 +195,7 @@
 
         .main-layout {
             display: grid;
-            grid-template-columns: 1fr 1.6fr;
+            grid-template-columns: 1fr 1.8fr;
             gap: 30px;
         }
 
@@ -258,6 +257,7 @@
         }
         .btn-del:hover { background: #e53e3e; color: white; border-color: #e53e3e; }
 
+        /* 表格區塊優化 (精簡大氣風格) */
         .table-section {
             background: white;
             border: 2px solid #e2e8f0;
@@ -272,32 +272,80 @@
             border-bottom: 2px solid #e2e8f0;
             color: #1a365d;
         }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f7fafc; padding: 18px 25px; font-size: 1.1rem; color: #4a5568; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 22px 25px; font-size: 1.3rem; border-bottom: 1px solid #edf2f7; }
-        .td-year { font-weight: 900; color: #2b6cb0; font-size: 1.4rem; display: flex; align-items: center; gap: 8px;}
-        .td-cost { color: #e53e3e; font-weight: bold; }
-        .td-value { font-weight: 900; color: #2d3748; }
+        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
         
-        .badge-positive { background-color: #c6f6d5; color: #22543d; padding: 8px 14px; border-radius: 10px; font-weight: bold; }
-        .badge-negative { background-color: #fed7d7; color: #742a2a; padding: 8px 14px; border-radius: 10px; font-weight: bold; }
+        /* 定義每欄寬度比例 */
+        th:nth-child(1), td:nth-child(1) { width: 11%; padding-left: 20px; } /* 年期 */
+        th:nth-child(2), td:nth-child(2) { width: 15%; } /* 本金 */
+        th:nth-child(3), td:nth-child(3) { width: 22%; } /* 總支出 */
+        th:nth-child(4), td:nth-child(4) { width: 16%; } /* 現金價值 */
+        th:nth-child(5), td:nth-child(5) { width: 16%; } /* 還款後價值 */
+        th:nth-child(6), td:nth-child(6) { width: 20%; padding-right: 20px; } /* 回報 */
 
-        /* 展開算式的容器樣式 */
-        .formula-container {
-            background-color: #f7fafc;
-            border-top: 1px dashed #e2e8f0;
-            padding: 20px 30px;
-            font-size: 1.1rem;
-            line-height: 1.7;
+        th { 
+            background: #f7fafc; 
+            padding: 16px 10px; 
+            font-size: 1.1rem; 
+            color: #4a5568; 
+            border-bottom: 2px solid #e2e8f0; 
+            font-weight: bold;
+        }
+        td { 
+            padding: 16px 10px; 
+            font-size: 1.25rem; 
+            border-bottom: 1px solid #edf2f7; 
+            vertical-align: top;
+            line-height: 1.4;
+        }
+        
+        /* 核心精髓：微縮細字算式樣式 */
+        .sub-formula {
+            display: block;
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-top: 6px;
+            font-weight: normal;
+        }
+        
+        .td-year { font-weight: bold; color: #2d3748; font-size: 1.3rem; }
+        .td-main-val { font-weight: bold; color: #2d3748; }
+
+        /* 回報欄位的細部排版 */
+        .return-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .return-row-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .profit-text { font-weight: bold; }
+        .badge-roi {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: white;
+        }
+        .bg-positive { background-color: #3182ce; } /* 藍色代表正回報 */
+        .bg-negative { background-color: #e53e3e; } /* 紅色代表負回報 */
+        
+        .cagr-text {
+            font-size: 0.95rem;
+            font-weight: bold;
             color: #4a5568;
         }
-        .formula-container ul {
-            padding-left: 0;
-            list-style: none;
-            margin: 10px 0 0 0;
-        }
-        .formula-container li {
-            margin-bottom: 12px;
+
+        .btn-arrow-toggle {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0;
+            margin-left: auto;
         }
 
         @media print {
@@ -306,7 +354,6 @@
             .btn-pdf, .btn-add, .btn-del, .fee-toggle-container { display: none !important; }
             .csv-section { border: none; padding: 0; }
             .csv-row { border: none; background: transparent; padding: 5px 0; }
-            .formula-row { display: table-row !important; } /* 列印時自動展開細節方便審閱 */
         }
     </style>
 </head>
@@ -315,7 +362,7 @@
 <div class="container">
     <header>
         <div>
-            <h1 style="font-size: 2.4rem;">保費融資計算機</h1>
+            <h1 style="font-size: 2.4rem;">保費融資大字分析儀表板</h1>
         </div>
         <button class="btn-pdf" onclick="window.print()">匯出 PDF 報告</button>
     </header>
@@ -342,7 +389,7 @@
         <div class="input-card">
             <div class="card-label">融資比率 %</div>
             <div class="card-input-wrapper">
-                <input type="number" id="ltvRate" value="90" oninput="calculateAll()"><span>%</span>
+                <input type="number" id="ltvRate" value="88.1818" step="0.0001" oninput="calculateAll()"><span>%</span>
             </div>
         </div>
         <div class="input-card">
@@ -385,8 +432,8 @@
             </div>
             <div class="fee-input-wrapper">
                 <span id="feeSymbol">%</span>
-                <input type="number" id="annualFeeValue" value="0.1" step="0.01" oninput="calculateAll()">
-                <span id="feeSuffix" style="font-size: 0.95rem; margin-left: 10px; color:#a0aec0;">貸款額</span>
+                <input type="number" id="annualFeeValue" value="0.0" step="0.01" oninput="calculateAll()">
+                <span id="feeSuffix" style="font-size: 0.95rem; margin-left: 10px; color:#a0aec0;">of Loan Amount</span>
             </div>
         </div>
     </div>
@@ -401,14 +448,16 @@
         </div>
 
         <div class="table-section">
-            <div class="table-title">年度分析明細 (點擊各行可展開/收合詳細算式)</div>
+            <div class="table-title">年度精簡分析明細</div>
             <table id="resultTable">
                 <thead>
                     <tr>
-                        <th style="padding-left:25px;">持有年期</th>
-                        <th>累計成本</th>
+                        <th style="padding-left:20px;">年期</th>
+                        <th>本金</th>
+                        <th>總支出</th>
+                        <th>現金價值</th>
                         <th>還款後價值</th>
-                        <th style="text-align:right; padding-right:25px;">槓桿回報率 %</th>
+                        <th style="padding-right:20px;">回報</th>
                     </tr>
                 </thead>
                 <tbody id="resultTableBody"></tbody>
@@ -419,14 +468,13 @@
 
 <script>
     let defaultData = [
-        { year: 3, csv: 1420000 },
-        { year: 5, csv: 1689727 },
-        { year: 8, csv: 1850000 },
-        { year: 10, csv: 2003704 }
+        { year: 3, csv: 1400000 },
+        { year: 4, csv: 1520000 },
+        { year: 5, csv: 1690000 }
     ];
 
-    let annualFeeMode = 'percent'; // 'percent' 或 'fixed'
-    let openRows = {}; // 用於追蹤各年期公式的展開狀態
+    let annualFeeMode = 'percent';
+    let openRows = {}; 
 
     function init() {
         const container = document.getElementById('csvRowsContainer');
@@ -448,13 +496,13 @@
             btnFixed.classList.remove('active');
             feeSymbol.innerText = '%';
             feeSuffix.innerText = 'of Loan Amount';
-            feeInput.value = "0.1";
+            feeInput.value = "0.0";
         } else {
             btnPercent.classList.remove('active');
             btnFixed.classList.add('active');
             feeSymbol.innerText = '$';
             feeSuffix.innerText = '固定手續費';
-            feeInput.value = "1000";
+            feeInput.value = "0";
         }
         calculateAll();
     }
@@ -499,20 +547,19 @@
         calculateAll();
     }
 
-    function formatWan(val) { return (val / 10000).toFixed(1) + ' 萬'; }
+    function formatWan(val) { 
+        return (val / 10000).toFixed(1) + '萬'; 
+    }
 
-    // 展開與收合詳細算式切換
-    function toggleFormula(year) {
-        const formulaRow = document.getElementById(`formula-${year}`);
+    function toggleRowArrow(year) {
         const arrow = document.getElementById(`arrow-${year}`);
-        if (formulaRow.style.display === 'none') {
-            formulaRow.style.display = 'table-row';
-            arrow.innerText = '▼';
-            openRows[year] = true;
-        } else {
-            formulaRow.style.display = 'none';
-            arrow.innerText = '▶';
+        if (!arrow) return;
+        if (openRows[year]) {
+            arrow.innerText = '︿';
             openRows[year] = false;
+        } else {
+            arrow.innerText = '﹀';
+            openRows[year] = true;
         }
     }
 
@@ -527,6 +574,7 @@
 
         document.getElementById('lblInterestRate').innerText = interestRate + '%';
 
+        // 核心貸款與本金計算
         const loanAmount = day1Csv * (ltvRate / 100);
         const initialPrincipal = discountedPremium - loanAmount + applicationFee;
 
@@ -551,105 +599,76 @@
         rowsData.forEach(row => {
             if(row.year <= 0) return;
 
-            // 1. 計算每年利息支出
+            // 1. 持有成本計算
             const annualInterest = loanAmount * (interestRate / 100);
-            
-            // 2. 計算每年手續費 (按比例或固定收費)
-            const annualServiceFee = annualFeeMode === 'percent' 
-                ? loanAmount * (annualFeeValue / 100) 
-                : annualFeeValue;
-
-            // 3. 每年總成本與累計持有成本
+            const annualServiceFee = annualFeeMode === 'percent' ? loanAmount * (annualFeeValue / 100) : annualFeeValue;
             const annualCost = annualInterest + annualServiceFee;
+            
+            // 累計總支出
             const cumulativeCost = annualCost * row.year;
             
-            // 4. 還款後淨價值與利潤
+            // 2. 還款後價值
             const valueAfterRepay = row.csv - loanAmount;
+            
+            // 3. 回報與利潤
             const netProfit = valueAfterRepay - initialPrincipal - cumulativeCost;
             const returnRate = (netProfit / (initialPrincipal || 1)) * 100;
+            
+            // 4. 年化收益率 (CAGR) 計算公式
+            // 公式: ((還款後價值 / (初始本金 + 累計支出)) ^ (1/年期)) - 1
+            // 另一種對標圖中演算法：以初始投入本金與最終淨資產關係推算
+            let cagr = 0;
+            if (valueAfterRepay > 0 && initialPrincipal > 0) {
+                // 對標圖中的實算年化 (以總回報率推算年化)
+                cagr = (Math.pow(1 + (returnRate / 100), 1 / row.year) - 1) * 100;
+            }
 
-            // 算式展示專用的手續費文字描述
-            const feeFormulaText = annualFeeMode === 'percent'
-                ? `貸款額 $${Math.round(loanAmount).toLocaleString()} &times; ${annualFeeValue}%`
-                : `固定收費 $${annualFeeValue.toLocaleString()}`;
+            if (!openRows.hasOwnProperty(row.year)) {
+                openRows[row.year] = false; 
+            }
 
-            // 創建主數據行
             const tr = document.createElement('tr');
             tr.style.cursor = 'pointer';
-            tr.onclick = () => toggleFormula(row.year);
+            tr.onclick = () => toggleRowArrow(row.year);
             
-            const isRowOpen = openRows[row.year] ? '▼' : '▶';
-            tr.innerHTML = `
-                <td class="td-year" style="padding-left:25px;">
-                    <span id="arrow-${row.year}" style="color: #4a5568; font-size: 0.9rem; width: 15px; display: inline-block;">${isRowOpen}</span>
-                    ${row.year} 年
-                </td>
-                <td class="td-cost">${formatWan(cumulativeCost)}</td>
-                <td class="td-value">${formatWan(valueAfterRepay)}</td>
-                <td style="text-align:right; padding-right:25px;">
-                    <span class="${returnRate >= 0 ? 'badge-positive' : 'badge-negative'}">
-                        ${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(1)}%
-                    </span>
-                </td>
-            `;
-            tbody.appendChild(tr);
+            // 字串格式化處理（用於微縮算式顯示）
+            const loanWan = (loanAmount / 10000).toFixed(1);
+            const csvWan = (row.csv / 10000).toFixed(1);
+            const principalWan = (initialPrincipal / 10000).toFixed(1);
 
-            // 創建可摺疊隱藏的詳細公式行
-            const formulaTr = document.createElement('tr');
-            formulaTr.id = `formula-${row.year}`;
-            formulaTr.className = 'formula-row';
-            formulaTr.style.display = openRows[row.year] ? 'table-row' : 'none';
-            formulaTr.innerHTML = `
-                <td colspan="4" style="padding: 0; background: #fafafa;">
-                    <div class="formula-container">
-                        <div style="font-weight: 800; color: #2b6cb0; margin-bottom: 12px; font-size: 1.15rem;">
-                            📊 第 ${row.year} 年 詳細計算明細與公式步驟：
+            tr.innerHTML = `
+                <td class="td-year">${row.year}</td>
+                <td class="td-main-val">${formatWan(initialPrincipal)}</td>
+                <td>
+                    <span class="td-main-val">${formatWan(cumulativeCost)}</span>
+                    <span class="sub-formula">${loanWan}萬 x ${interestRate}% x ${row.year}</span>
+                </td>
+                <td class="td-main-val">${formatWan(row.csv)}</td>
+                <td>
+                    <span class="td-main-val">${formatWan(valueAfterRepay)}</span>
+                    <span class="sub-formula">${csvWan}萬 - ${loanWan}萬</span>
+                </td>
+                <td>
+                    <div class="return-container">
+                        <div class="return-row-top">
+                            <span class="profit-text" style="color: ${netProfit >= 0 ? '#2b6cb0' : '#e53e3e'}">
+                                ${netProfit >= 0 ? '' : ''}${formatWan(netProfit)}
+                            </span>
+                            <span class="badge-roi ${returnRate >= 0 ? 'bg-positive' : 'bg-negative'}">
+                                ${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(2)}%
+                            </span>
+                            <button class="btn-arrow-toggle" id="arrow-${row.year}">︿</button>
                         </div>
-                        <ul>
-                            <li>
-                                <strong>1. 預計貸款金額：</strong><br>
-                                首日退保價值 ($${day1Csv.toLocaleString()}) &times; 融資比率 (${ltvRate}%) 
-                                = <span style="color:#2b6cb0; font-weight:bold;">$${Math.round(loanAmount).toLocaleString()}</span>
-                            </li>
-                            <li>
-                                <strong>2. 初始投入本金：</strong><br>
-                                折扣後保費 ($${discountedPremium.toLocaleString()}) - 貸款金額 ($${Math.round(loanAmount).toLocaleString()}) + 申請手續費 ($${applicationFee.toLocaleString()}) 
-                                = <span style="color:#38a169; font-weight:bold;">$${Math.round(initialPrincipal).toLocaleString()}</span>
-                            </li>
-                            <li>
-                                <strong>3. 每年持有成本：</strong><br>
-                                每年利息 ($${Math.round(annualInterest).toLocaleString()}) + 每年手續費 ($${Math.round(annualServiceFee).toLocaleString()}) 
-                                = <span style="color:#e53e3e; font-weight:bold;">$${Math.round(annualCost).toLocaleString()} / 年</span>
-                                <div style="font-size: 0.95rem; color: #718096; padding-left: 15px; margin-top: 4px;">
-                                    &bull; 利息實算: $${Math.round(loanAmount).toLocaleString()} &times; ${interestRate}% = $${Math.round(annualInterest).toLocaleString()}<br>
-                                    &bull; 手續費實算: ${feeFormulaText} = $${Math.round(annualServiceFee).toLocaleString()}
-                                </div>
-                            </li>
-                            <li>
-                                <strong>4. 累計持有成本 (C)：</strong><br>
-                                每年總成本 ($${Math.round(annualCost).toLocaleString()}) &times; 持有年期 (${row.year} 年) 
-                                = <span style="color:#e53e3e; font-weight:bold;">$${Math.round(cumulativeCost).toLocaleString()}</span>
-                            </li>
-                            <li>
-                                <strong>5. 還款後價值 (V)：</strong><br>
-                                預期價值 ($${row.csv.toLocaleString()}) - 貸款金額 ($${Math.round(loanAmount).toLocaleString()}) 
-                                = <span style="color:#2d3748; font-weight:bold;">$${Math.round(valueAfterRepay).toLocaleString()}</span>
-                            </li>
-                            <li>
-                                <strong>6. 槓桿淨利潤 (P)：</strong><br>
-                                還款後價值 ($${Math.round(valueAfterRepay).toLocaleString()}) - 初始投入本金 ($${Math.round(initialPrincipal).toLocaleString()}) - 累計成本 ($${Math.round(cumulativeCost).toLocaleString()}) 
-                                = <span style="color:${netProfit >= 0 ? '#38a169' : '#e53e3e'}; font-weight:bold;">$${Math.round(netProfit).toLocaleString()}</span>
-                            </li>
-                            <li>
-                                <strong>7. 槓桿回報率 (%)：</strong><br>
-                                [ 槓桿淨利潤 ($${Math.round(netProfit).toLocaleString()}) / 初始投入本金 ($${Math.round(initialPrincipal).toLocaleString()}) ] &times; 100% 
-                                = <span style="font-weight:900; color:${netProfit >= 0 ? '#22543d' : '#742a2a'};">${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(2)}%</span>
-                            </li>
-                        </ul>
+                        <div class="cagr-text">
+                            *年化收益: ${cagr >= 0 ? '' : ''}${cagr.toFixed(2)}%
+                        </div>
+                        <span class="sub-formula" style="font-size:0.78rem; letter-spacing:-0.2px;">
+                            (${csvWan}萬 - ${principalWan}萬 - ${loanWan}萬 - 總支出) / ${principalWan}萬
+                        </span>
                     </div>
                 </td>
             `;
-            tbody.appendChild(formulaTr);
+            tbody.appendChild(tr);
         });
     }
 
